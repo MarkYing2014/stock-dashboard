@@ -2,8 +2,11 @@ services:
   - type: web
     name: stock-dashboard-api
     env: python
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
+      - key: CORS_ORIGINS
+        value: https://frontend-7wa5odsvi-markying2014s-projects.vercel.app,http://localhost:3000
