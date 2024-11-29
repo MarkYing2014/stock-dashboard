@@ -1,20 +1,26 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
-import asyncio
 import json
+import asyncio
+from typing import List
+import os
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import pandas as pd
 
+# Load environment variables
+load_dotenv()
+
 app = FastAPI()
+
+# Get CORS origins from environment variable or use default
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Local development
-        "https://stock-dashboard-frontend.vercel.app",  # Replace with your Vercel domain
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -6,7 +6,18 @@ import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveCon
 import { ArrowDownIcon, ArrowUpIcon } from 'lucide-react';
 
 // Custom candlestick component
-const CustomCandlestick = (props: any) => {
+interface CandlestickProps {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  open: number;
+  close: number;
+  high: number;
+  low: number;
+}
+
+const CustomCandlestick = (props: CandlestickProps) => {
   const { x, y, width, height, open, close, high, low } = props;
   const isGreen = close > open;
   const color = isGreen ? '#22c55e' : '#ef4444';
@@ -69,7 +80,6 @@ interface PeriodMetrics {
 
 export default function Home() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 0 });
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [selectedStock, setSelectedStock] = useState<string>('HII');
   const [chartData, setChartData] = useState<ChartData[]>([]);
@@ -83,7 +93,8 @@ export default function Home() {
   });
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000/ws');
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws';
+    const ws = new WebSocket(wsUrl);
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setStocks(data);
@@ -95,7 +106,8 @@ export default function Home() {
   useEffect(() => {
     const fetchChartData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/stock/${selectedStock}/chart`);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/api/stock/${selectedStock}/chart`);
         const data = await response.json();
         
         // Calculate moving average for trend line
@@ -127,7 +139,7 @@ export default function Home() {
   }, [selectedStock]);
 
   useEffect(() => {
-    const calculatePeriodMetrics = (data: any[]) => {
+    const calculatePeriodMetrics = (data: ChartData[]) => {
       if (data.length === 0) return;
       
       const volumes = data.map(d => d.volume);
