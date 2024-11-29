@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.stock-price {
+  color: #333333;
+  font-weight: 500;
+}
+
+.stock-symbol {
+  color: #000000;
+  font-weight: 600;
+}
+
+.percentage-up {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.percentage-down {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.chart-title {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+.metric-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.metric-value {
+  color: #000000 !important;
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+}
+
+.metric-label {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Chart styles */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #e5e7eb;
+  stroke-width: 0.5;
+}
+
+.recharts-tooltip-wrapper {
+  background-color: white !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-tooltip {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tooltip-date {
+  color: #000000;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tooltip-price {
+  color: #374151;
+  margin: 4px 0;
+}
+
+.tooltip-volume {
+  color: #374151;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.recharts-default-tooltip {
+  background-color: white !important;
+  border: none !important;
+  border-radius: 6px;
+  padding: 8px !important;
+}
+
+.recharts-tooltip-label {
+  color: #000000 !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+}
+
+.recharts-tooltip-item {
+  color: #4b5563 !important;
+  padding: 2px 0 !important;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
