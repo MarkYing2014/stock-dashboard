@@ -14,8 +14,9 @@ load_dotenv()
 
 app = FastAPI()
 
-# Get CORS origins from environment variable or use default
+# Get CORS origins from environment variable, fallback to localhost if not set
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+port = int(os.getenv("PORT", 8000))
 
 # Add CORS middleware
 app.add_middleware(
