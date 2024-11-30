@@ -6,9 +6,14 @@ import json
 import asyncio
 from typing import List
 import os
+import logging
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import pandas as pd
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +27,8 @@ app = FastAPI(
 # Get CORS origins from environment variable, fallback to localhost if not set
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 port = int(os.getenv("PORT", 8000))
+
+logger.info(f"Starting server with CORS origins: {cors_origins}")
 
 # Add CORS middleware
 app.add_middleware(
@@ -53,18 +60,20 @@ def get_stock_data(ticker):
 
 @app.get("/api/stocks")
 async def get_stocks():
+    logger.info("Fetching stocks data")
     stocks_data = []
     for ticker in TICKERS:
         try:
             stock_data = get_stock_data(ticker)
             stocks_data.append(stock_data)
         except Exception as e:
-            print(f"Error fetching data for {ticker}: {str(e)}")
+            logger.error(f"Error fetching data for {ticker}: {str(e)}")
     
     return stocks_data
 
 @app.get("/api/stock/{ticker}/chart")
 async def get_stock_chart(ticker: str, period: str = "1mo"):
+    logger.info(f"Fetching chart data for {ticker} with period {period}")
     try:
         stock = yf.Ticker(ticker)
         df = stock.history(period=period)
@@ -79,6 +88,7 @@ async def get_stock_chart(ticker: str, period: str = "1mo"):
         }
         return chart_data
     except Exception as e:
+        logger.error(f"Error fetching chart data for {ticker}: {str(e)}")
         return {"error": str(e)}
 
 @app.get("/", response_class=HTMLResponse)
@@ -116,6 +126,6 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_json(stocks_data)
             await asyncio.sleep(5)  # Update every 5 seconds
     except Exception as e:
-        print(f"WebSocket error: {str(e)}")
+        logger.error(f"WebSocket error: {str(e)}")
     finally:
         await websocket.close()
