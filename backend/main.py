@@ -21,7 +21,10 @@ load_dotenv()
 app = FastAPI(
     title="Stock Dashboard API",
     description="API for real-time stock data and charts",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Get CORS origins from environment variable, fallback to localhost if not set
@@ -64,15 +67,22 @@ async def root():
     logger.info("Root endpoint accessed")
     return HTMLResponse(content="""
     <html>
-        <head><title>Stock Dashboard API</title></head>
+        <head>
+            <title>Stock Dashboard API</title>
+            <style>
+                body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 20px; }
+                code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+            </style>
+        </head>
         <body>
             <h1>Stock Dashboard API</h1>
             <h2>Available Endpoints:</h2>
             <ul>
-                <li><code>GET /api/stocks</code> - Get real-time stock data</li>
-                <li><code>GET /api/stock/{ticker}/chart</code> - Get historical chart data for a specific stock</li>
+                <li><code>GET /stocks</code> - Get real-time stock data</li>
+                <li><code>GET /stock/{ticker}/chart</code> - Get historical chart data for a specific stock</li>
                 <li><code>WebSocket /ws</code> - Real-time stock updates</li>
             </ul>
+            <p>For API documentation, visit <a href="/docs">/docs</a></p>
         </body>
     </html>
     """)
@@ -83,7 +93,7 @@ async def head():
     logger.info("Health check performed")
     return Response(status_code=200)
 
-@app.get("/api/stocks")
+@app.get("/stocks")
 async def get_stocks():
     """Get real-time stock data for predefined stocks"""
     logger.info("Fetching stock data")
@@ -100,7 +110,7 @@ async def get_stocks():
         logger.error(f"Error fetching stock data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/stock/{ticker}/chart")
+@app.get("/stock/{ticker}/chart")
 async def get_stock_chart(ticker: str, period: str = "1mo"):
     """Get historical chart data for a specific stock"""
     logger.info(f"Fetching chart data for {ticker}")
