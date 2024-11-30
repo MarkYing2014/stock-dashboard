@@ -28,7 +28,7 @@ app = FastAPI(
 origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 
 # Get port from environment variable
-port = int(os.getenv("PORT", "10000"))
+port = 10000
 logger.info(f"Starting server with port: {port}")
 
 # Add CORS middleware
