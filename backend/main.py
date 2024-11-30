@@ -21,7 +21,11 @@ load_dotenv()
 app = FastAPI(
     title="Stock Dashboard API",
     description="API for real-time stock data and charts",
-    version="1.0.0"
+    version="1.0.0",
+    root_path="",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Get CORS origins from environment variable, fallback to localhost if not set
@@ -33,7 +37,7 @@ logger.info(f"Starting server with CORS origins: {origins}")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Allow all origins temporarily for testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
