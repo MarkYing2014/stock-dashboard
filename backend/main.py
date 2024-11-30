@@ -21,15 +21,12 @@ load_dotenv()
 app = FastAPI(
     title="Stock Dashboard API",
     description="API for real-time stock data and charts",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    version="1.0.0"
 )
 
 # Get CORS origins from environment variable, fallback to localhost if not set
 origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
-port = int(os.getenv("PORT", 10000))
+port = int(os.getenv("PORT", 8000))
 
 logger.info(f"Starting server with CORS origins: {origins}")
 
@@ -61,6 +58,11 @@ def get_stock_data(ticker):
         "eps": info.get("trailingEps", 0)
     }
 
+@app.get("/healthz")
+async def healthcheck():
+    """Health check endpoint"""
+    return {"status": "healthy"}
+
 @app.get("/")
 async def root():
     """API Documentation endpoint"""
@@ -86,11 +88,6 @@ async def root():
         </body>
     </html>
     """)
-
-@app.get("/healthz")
-async def healthcheck():
-    """Health check endpoint"""
-    return {"status": "healthy"}
 
 @app.get("/stocks")
 async def get_stocks():
