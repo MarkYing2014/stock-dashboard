@@ -82,8 +82,9 @@ async def get_stock_chart(ticker: str, period: str = "1mo"):
         return {"error": str(e)}
 
 @app.get("/", response_class=HTMLResponse)
+@app.head("/", response_class=HTMLResponse)
 async def root():
-    return """
+    html_content = """
     <html>
         <head>
             <title>Stock Dashboard API</title>
@@ -104,6 +105,7 @@ async def root():
         </body>
     </html>
     """
+    return html_content
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
