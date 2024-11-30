@@ -107,7 +107,7 @@ export default function Home() {
     const fetchChartData = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const response = await fetch(`${apiUrl}/api/stock/${selectedStock}/chart`);
+        const response = await fetch(`${apiUrl}/stock/${selectedStock}/chart`);
         const data = await response.json();
         
         // Calculate moving average for trend line
@@ -135,8 +135,27 @@ export default function Home() {
       }
     };
 
-    fetchChartData();
+    if (selectedStock) {
+      fetchChartData();
+    }
   }, [selectedStock]);
+
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/stocks`);
+        const data = await response.json();
+        setStocks(data);
+      } catch (error) {
+        console.error('Error fetching stocks:', error);
+      }
+    };
+
+    fetchStocks();
+    const interval = setInterval(fetchStocks, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const calculatePeriodMetrics = (data: ChartData[]) => {
