@@ -1,6 +1,6 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, Response, HTTPException, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
 import yfinance as yf
 import json
 import asyncio
@@ -25,15 +25,15 @@ app = FastAPI(
 )
 
 # Get CORS origins from environment variable, fallback to localhost if not set
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 port = int(os.getenv("PORT", 8000))
 
-logger.info(f"Starting server with CORS origins: {cors_origins}")
+logger.info(f"Starting server with CORS origins: {origins}")
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -58,22 +58,52 @@ def get_stock_data(ticker):
         "eps": info.get("trailingEps", 0)
     }
 
+@app.get("/")
+async def root():
+    """API Documentation endpoint"""
+    logger.info("Root endpoint accessed")
+    return HTMLResponse(content="""
+    <html>
+        <head><title>Stock Dashboard API</title></head>
+        <body>
+            <h1>Stock Dashboard API</h1>
+            <h2>Available Endpoints:</h2>
+            <ul>
+                <li><code>GET /api/stocks</code> - Get real-time stock data</li>
+                <li><code>GET /api/stock/{ticker}/chart</code> - Get historical chart data for a specific stock</li>
+                <li><code>WebSocket /ws</code> - Real-time stock updates</li>
+            </ul>
+        </body>
+    </html>
+    """)
+
+@app.head("/")
+async def head():
+    """Health check endpoint"""
+    logger.info("Health check performed")
+    return Response(status_code=200)
+
 @app.get("/api/stocks")
 async def get_stocks():
-    logger.info("Fetching stocks data")
-    stocks_data = []
-    for ticker in TICKERS:
-        try:
-            stock_data = get_stock_data(ticker)
-            stocks_data.append(stock_data)
-        except Exception as e:
-            logger.error(f"Error fetching data for {ticker}: {str(e)}")
-    
-    return stocks_data
+    """Get real-time stock data for predefined stocks"""
+    logger.info("Fetching stock data")
+    try:
+        stocks_data = []
+        for ticker in TICKERS:
+            try:
+                stock_data = get_stock_data(ticker)
+                stocks_data.append(stock_data)
+            except Exception as e:
+                logger.error(f"Error fetching data for {ticker}: {str(e)}")
+        return stocks_data
+    except Exception as e:
+        logger.error(f"Error fetching stock data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/stock/{ticker}/chart")
 async def get_stock_chart(ticker: str, period: str = "1mo"):
-    logger.info(f"Fetching chart data for {ticker} with period {period}")
+    """Get historical chart data for a specific stock"""
+    logger.info(f"Fetching chart data for {ticker}")
     try:
         stock = yf.Ticker(ticker)
         df = stock.history(period=period)
@@ -89,33 +119,7 @@ async def get_stock_chart(ticker: str, period: str = "1mo"):
         return chart_data
     except Exception as e:
         logger.error(f"Error fetching chart data for {ticker}: {str(e)}")
-        return {"error": str(e)}
-
-@app.get("/", response_class=HTMLResponse)
-@app.head("/", response_class=HTMLResponse)
-async def root():
-    html_content = """
-    <html>
-        <head>
-            <title>Stock Dashboard API</title>
-            <style>
-                body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 20px; }
-                code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
-            </style>
-        </head>
-        <body>
-            <h1>Stock Dashboard API</h1>
-            <p>Available endpoints:</p>
-            <ul>
-                <li><code>GET /api/stocks</code> - Get real-time data for all stocks</li>
-                <li><code>GET /api/stock/{ticker}/chart</code> - Get chart data for a specific stock</li>
-                <li><code>WebSocket /ws</code> - Real-time stock updates every 5 seconds</li>
-            </ul>
-            <p>For API documentation, visit <a href="/docs">/docs</a></p>
-        </body>
-    </html>
-    """
-    return html_content
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
