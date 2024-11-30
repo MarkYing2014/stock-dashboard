@@ -4,7 +4,7 @@ services:
     env: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
     healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
@@ -12,4 +12,4 @@ services:
       - key: CORS_ORIGINS
         value: https://frontend-7wa5odsvi-markying2014s-projects.vercel.app,http://localhost:3000
       - key: PORT
-        value: 10000
+        value: 8000

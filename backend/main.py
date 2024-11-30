@@ -59,11 +59,11 @@ def get_stock_data(ticker):
     }
 
 @app.get("/healthz")
-def healthcheck():
+async def healthcheck():
     return {"status": "healthy"}
 
 @app.get("/")
-def root():
+async def root():
     return HTMLResponse(content="""
     <html>
         <head>
