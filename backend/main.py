@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 import yfinance as yf
 import json
 import asyncio
@@ -12,7 +13,11 @@ import pandas as pd
 # Load environment variables
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(
+    title="Stock Dashboard API",
+    description="API for real-time stock data and charts",
+    version="1.0.0"
+)
 
 # Get CORS origins from environment variable, fallback to localhost if not set
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
@@ -75,6 +80,30 @@ async def get_stock_chart(ticker: str, period: str = "1mo"):
         return chart_data
     except Exception as e:
         return {"error": str(e)}
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    return """
+    <html>
+        <head>
+            <title>Stock Dashboard API</title>
+            <style>
+                body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 20px; }
+                code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+            </style>
+        </head>
+        <body>
+            <h1>Stock Dashboard API</h1>
+            <p>Available endpoints:</p>
+            <ul>
+                <li><code>GET /api/stocks</code> - Get real-time data for all stocks</li>
+                <li><code>GET /api/stock/{ticker}/chart</code> - Get chart data for a specific stock</li>
+                <li><code>WebSocket /ws</code> - Real-time stock updates every 5 seconds</li>
+            </ul>
+            <p>For API documentation, visit <a href="/docs">/docs</a></p>
+        </body>
+    </html>
+    """
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
