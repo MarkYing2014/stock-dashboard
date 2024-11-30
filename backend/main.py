@@ -1,6 +1,6 @@
-from fastapi import FastAPI, WebSocket, Response, HTTPException, HTMLResponse
+from fastapi import FastAPI, WebSocket, Response, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 import yfinance as yf
 import json
 import asyncio
