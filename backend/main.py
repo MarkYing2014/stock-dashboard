@@ -21,10 +21,7 @@ load_dotenv()
 app = FastAPI(
     title="Stock Dashboard API",
     description="API for real-time stock data and charts",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    version="1.0.0"
 )
 
 # Get CORS origins from environment variable, fallback to localhost if not set
@@ -54,10 +51,10 @@ def get_stock_data(ticker):
         "currentValue": round(history["Close"], 2),
         "previousClose": round(info.get("previousClose", 0), 2),
         "change": round(history["Close"] - info.get("previousClose", 0), 2),
-        "changePct": round(((history["Close"] - info.get("previousClose", 0)) / info.get("previousClose", 0)) * 100, 2),
-        "volume": info.get("volume", 0),
+        "changePct": round(((history["Close"] - info.get("previousClose", 0)) / info.get("previousClose", 1)) * 100, 2),
+        "volume": history["Volume"],
         "marketCap": info.get("marketCap", 0),
-        "peRatio": info.get("forwardPE", 0),
+        "peRatio": round(info.get("trailingPE", 0), 2),
         "eps": info.get("trailingEps", 0)
     }
 
@@ -118,14 +115,17 @@ async def get_stock_chart(ticker: str, period: str = "1mo"):
         stock = yf.Ticker(ticker)
         df = stock.history(period=period)
         
-        chart_data = {
-            "dates": df.index.strftime('%Y-%m-%d').tolist(),
-            "prices": df["Close"].round(2).tolist(),
-            "volumes": df["Volume"].tolist(),
-            "high": df["High"].round(2).tolist(),
-            "low": df["Low"].round(2).tolist(),
-            "open": df["Open"].round(2).tolist(),
-        }
+        chart_data = []
+        for index, row in df.iterrows():
+            chart_data.append({
+                "date": index.strftime("%Y-%m-%d"),
+                "open": round(row["Open"], 2),
+                "high": round(row["High"], 2),
+                "low": round(row["Low"], 2),
+                "close": round(row["Close"], 2),
+                "volume": int(row["Volume"])
+            })
+        
         return chart_data
     except Exception as e:
         logger.error(f"Error fetching chart data for {ticker}: {str(e)}")
@@ -137,9 +137,8 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             stocks_data = await get_stocks()
-            await websocket.send_json(stocks_data)
-            await asyncio.sleep(5)  # Update every 5 seconds
+            await websocket.send_text(json.dumps(stocks_data))
+            await asyncio.sleep(5)
     except Exception as e:
         logger.error(f"WebSocket error: {str(e)}")
-    finally:
         await websocket.close()
