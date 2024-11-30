@@ -59,63 +59,59 @@ def get_stock_data(ticker):
     }
 
 @app.get("/healthz")
-async def healthcheck():
-    """Health check endpoint"""
+def healthcheck():
     return {"status": "healthy"}
 
 @app.get("/")
-async def root():
-    """API Documentation endpoint"""
-    logger.info("Root endpoint accessed")
+def root():
     return HTMLResponse(content="""
     <html>
         <head>
             <title>Stock Dashboard API</title>
             <style>
-                body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 20px; }
-                code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                h1 { color: #333; }
+                .endpoint { margin: 20px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; }
             </style>
         </head>
         <body>
-            <h1>Stock Dashboard API</h1>
-            <h2>Available Endpoints:</h2>
-            <ul>
-                <li><code>GET /stocks</code> - Get real-time stock data</li>
-                <li><code>GET /stock/{ticker}/chart</code> - Get historical chart data for a specific stock</li>
-                <li><code>WebSocket /ws</code> - Real-time stock updates</li>
-            </ul>
-            <p>For API documentation, visit <a href="/docs">/docs</a></p>
+            <h1>Stock Dashboard API Documentation</h1>
+            <div class="endpoint">
+                <h3>GET /stocks</h3>
+                <p>Returns real-time data for predefined stocks</p>
+            </div>
+            <div class="endpoint">
+                <h3>GET /stock/{ticker}/chart</h3>
+                <p>Returns historical chart data for a specific stock</p>
+            </div>
+            <div class="endpoint">
+                <h3>GET /healthz</h3>
+                <p>Health check endpoint</p>
+            </div>
         </body>
     </html>
     """)
 
 @app.get("/stocks")
-async def get_stocks():
-    """Get real-time stock data for predefined stocks"""
-    logger.info("Fetching stock data")
+def get_stocks():
     try:
         stocks_data = []
         for ticker in TICKERS:
-            try:
-                stock_data = get_stock_data(ticker)
-                stocks_data.append(stock_data)
-            except Exception as e:
-                logger.error(f"Error fetching data for {ticker}: {str(e)}")
-        return stocks_data
+            stock_info = get_stock_data(ticker)
+            stocks_data.append(stock_info)
+        return JSONResponse(content=stocks_data)
     except Exception as e:
-        logger.error(f"Error fetching stock data: {str(e)}")
+        logger.error(f"Error fetching stocks data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/stock/{ticker}/chart")
-async def get_stock_chart(ticker: str, period: str = "1mo"):
-    """Get historical chart data for a specific stock"""
-    logger.info(f"Fetching chart data for {ticker}")
+def get_stock_chart(ticker: str, period: str = "1mo"):
     try:
         stock = yf.Ticker(ticker)
-        df = stock.history(period=period)
+        history = stock.history(period=period)
         
         chart_data = []
-        for index, row in df.iterrows():
+        for index, row in history.iterrows():
             chart_data.append({
                 "date": index.strftime("%Y-%m-%d"),
                 "open": round(row["Open"], 2),
@@ -125,7 +121,7 @@ async def get_stock_chart(ticker: str, period: str = "1mo"):
                 "volume": int(row["Volume"])
             })
         
-        return chart_data
+        return JSONResponse(content=chart_data)
     except Exception as e:
         logger.error(f"Error fetching chart data for {ticker}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -135,8 +131,11 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
-            stocks_data = await get_stocks()
-            await websocket.send_text(json.dumps(stocks_data))
+            stocks_data = []
+            for ticker in TICKERS:
+                stock_info = get_stock_data(ticker)
+                stocks_data.append(stock_info)
+            await websocket.send_json(stocks_data)
             await asyncio.sleep(5)
     except Exception as e:
         logger.error(f"WebSocket error: {str(e)}")
