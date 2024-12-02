@@ -59,11 +59,13 @@ def get_stock_data(ticker):
         "eps": info.get("trailingEps", 0)
     }
 
-@app.api_route("/healthz", methods=["GET", "HEAD"])
+@app.get("/healthz")
+@app.head("/healthz")
 async def healthcheck():
     return {"status": "healthy"}
 
-@app.api_route("/", methods=["GET", "HEAD"])
+@app.get("/")
+@app.head("/")
 async def root():
     return HTMLResponse(content="""
     <html>
@@ -93,7 +95,8 @@ async def root():
     </html>
     """)
 
-@app.api_route("/stocks", methods=["GET", "HEAD"])
+@app.get("/stocks")
+@app.head("/stocks")
 async def get_stocks():
     try:
         stocks_data = []
@@ -105,7 +108,8 @@ async def get_stocks():
         logger.error(f"Error fetching stocks data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.api_route("/stock/{ticker}/chart", methods=["GET", "HEAD"])
+@app.get("/stock/{ticker}/chart")
+@app.head("/stock/{ticker}/chart")
 async def get_stock_chart(ticker: str, period: str = "1mo"):
     try:
         stock = yf.Ticker(ticker)
